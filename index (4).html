@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuida IA — Asistente de Familias</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #F5EEFF;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: #F5EEFF;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    background: #9B5CC4;
+    padding: 16px 24px 14px;
+    text-align: center;
+  }
+  .header-logo {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 8px;
+    display: block;
+  }
+  .header-brand {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: block;
+  }
+  .header-sub {
+    color: #E8CCFF;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* PANTALLAS */
+  .screen { flex: 1; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ACCESO */
+  #screen-access {
+    justify-content: center;
+    padding: 28px 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 24px;
+    border: 1px solid #E2D0F5;
+    box-shadow: 0 4px 20px rgba(107,45,139,0.10);
+    text-align: center;
+  }
+  .card-icon { font-size: 46px; margin-bottom: 14px; display: block; }
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4A1A6E;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .card-text {
+    font-size: 14px;
+    color: #7A6A8A;
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+  .input-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9B6ABF;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: left;
+  }
+  .code-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #E2D0F5;
+    border-radius: 12px;
+    font-size: 28px;
+    text-align: center;
+    letter-spacing: 6px;
+    font-weight: 700;
+    color: #4A1A6E;
+    background: #F9F0FF;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .code-input:focus { border-color: #9B5CC4; }
+  .code-input.error { border-color: #E24B4A; background: #FFF0F0; }
+  .error-msg {
+    color: #A32D2D;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+    text-align: left;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: #9B5CC4;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 12px;
+  }
+  .btn-primary:hover { background: #8A4AB3; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: #CDB8E2; cursor: not-allowed; }
+  .privacy-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #F9F0FF;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 18px;
+    text-align: left;
+  }
+  .privacy-box p { font-size: 12px; color: #9B88B0; line-height: 1.5; }
+
+  /* LOADING */
+  #screen-loading {
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    padding: 40px;
+    text-align: center;
+  }
+  .spinner {
+    width: 52px; height: 52px;
+    border: 3px solid #E2D0F5;
+    border-top-color: #9B5CC4;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 15px; color: #9B88B0; font-style: italic; }
+
+  /* CHAT */
+  #screen-chat { }
+
+  .resident-bar {
+    background: #fff;
+    border-bottom: 1px solid #E2D0F5;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .res-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: #EEE0FF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #9B5CC4;
+    border: 2px solid #CCA8ED;
+    flex-shrink: 0;
+  }
+  .res-name { font-size: 15px; font-weight: 700; color: #4A1A6E; }
+  .res-room { font-size: 12px; color: #A888C8; }
+  .btn-salir {
+    margin-left: auto;
+    background: none;
+    border: 1px solid #E2D0F5;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #A888C8;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-salir:hover { background: #F9F0FF; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 300px;
+    max-height: calc(100vh - 280px);
+    background: #F5EEFF;
+  }
+
+  .msg { display: flex; gap: 8px; max-width: 88%; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .msg-av {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .msg.bot .msg-av { background: #9B5CC4; }
+  .msg.user .msg-av { background: #BB9EDB; }
+
+  .bubble {
+    padding: 11px 15px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .msg.bot .bubble {
+    background: #fff;
+    color: #4A1A6E;
+    border: 1px solid #E2D0F5;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user .bubble {
+    background: #9B5CC4;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .typing { display: none; align-self: flex-start; align-items: center; gap: 8px; }
+  .typing.on { display: flex; }
+  .typing-dots {
+    background: #fff;
+    border: 1px solid #E2D0F5;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    padding: 13px 16px;
+    display: flex; gap: 5px; align-items: center;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    background: #9B5CC4;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
+
+  .input-area {
+    background: #fff;
+    border-top: 1px solid #E2D0F5;
+    padding: 10px 14px 14px;
+  }
+  .quick-btns {
+    display: flex; gap: 7px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .quick-btn {
+    padding: 6px 11px;
+    background: #F9F0FF;
+    border: 1px solid #E2D0F5;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #9B5CC4;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .quick-btn:hover { background: #EEE0FF; border-color: #9B5CC4; }
+
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .msg-textarea {
+    flex: 1;
+    padding: 11px 15px;
+    border: 2px solid #E2D0F5;
+    border-radius: 22px;
+    font-size: 14px;
+    color: #4A1A6E;
+    background: #F9F0FF;
+    outline: none;
+    resize: none;
+    min-height: 44px;
+    max-height: 110px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .msg-textarea:focus { border-color: #9B5CC4; }
+  .btn-send {
+    width: 44px; height: 44px;
+    background: #9B5CC4;
+    border: none; border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-send:hover { background: #8A4AB3; }
+  .btn-send:active { transform: scale(0.95); }
+  .btn-send svg { width: 17px; height: 17px; fill: #fff; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 11px;
+    color: #BC9ED4;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <img src="logo-cuida-ia.png" alt="Cuida IA" class="header-logo">
+    <span class="header-brand">Cuida IA</span>
+    <span class="header-sub">Asistente de Familias</span>
+  </div>
+
+  <!-- PANTALLA ACCESO -->
+  <div id="screen-access" class="screen active">
+    <div class="card">
+      <span class="card-icon">🏡</span>
+      <h1 class="card-title">Bienvenido/a a su espacio familiar</h1>
+      <p class="card-text">Aquí puede consultar cómo está su familiar en cualquier momento. Introduce el código de habitación que encontrará en el QR que te dimos al ingreso.</p>
+      <label class="input-label" for="room-code">Código de habitación</label>
+      <input type="text" id="room-code" class="code-input" placeholder="101" maxlength="6" autocomplete="off">
+      <div class="error-msg" id="error-msg">No hemos encontrado ese código. ¿Está bien escrito?</div>
+      <button class="btn-primary" id="btn-entrar" onclick="acceder()">Consultar sobre mi familiar</button>
+      <div class="privacy-box">
+        <span>🔒</span>
+        <p>Solo las personas con el código de habitación pueden ver esta información. Sus datos están protegidos conforme al RGPD.</p>
+      </div>
+    </div>
+    <div class="footer">Cuida IA © 2026 — Mari Carmen Zamora</div>
+  </div>
+
+  <!-- PANTALLA LOADING -->
+  <div id="screen-loading" class="screen">
+    <div class="spinner"></div>
+    <p class="loading-text">Buscando información sobre su familiar...</p>
+  </div>
+
+  <!-- PANTALLA CHAT -->
+  <div id="screen-chat" class="screen">
+    <div class="resident-bar">
+      <div class="res-avatar" id="res-avatar">?</div>
+      <div>
+        <div class="res-name" id="res-name">—</div>
+        <div class="res-room" id="res-room">Habitación —</div>
+      </div>
+      <button class="btn-salir" onclick="salir()">← Salir</button>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="typing" id="typing">
+        <div class="msg-av" style="background:#9B5CC4;">🤝</div>
+        <div class="typing-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="quick-btns" id="quick-btns">
+        <button class="quick-btn" onclick="sendQuick('¿Cómo ha comido hoy?')">🍽️ ¿Ha comido bien?</button>
+        <button class="quick-btn" onclick="sendQuick('¿Cómo ha descansado esta noche?')">😴 ¿Ha descansado?</button>
+        <button class="quick-btn" onclick="sendQuick('¿Cómo está de ánimo hoy?')">💛 ¿Cómo está de ánimo?</button>
+        <button class="quick-btn" onclick="sendQuick('¿Ha participado en alguna actividad hoy?')">🎯 ¿Ha hecho actividades?</button>
+      </div>
+      <div class="input-row">
+        <textarea id="msg-input" class="msg-textarea" placeholder="Escribe tu pregunta aquí..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" onclick="sendMessage()" aria-label="Enviar">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIGURACIÓN — RELLENAR ESTOS VALORES
+// ════════════════════════════════════════
+const SHEET_ID  = '1kXlhLKu52znHGyzl_ncDNBKAP-fRVVslPZuEA23GOGE';
+const SHEET_TAB = 'Hoja 1';
+const GAPI_KEY  = 'AIzaSyCpQOI_gG7WD9_DbRP9Iyt5wf60bHLEu8s';
+// ════════════════════════════════════════
+
+const SYSTEM_PROMPT = `Eres Alma, el Asistente de Familias de Cuida IA.
+Cuida IA es un sistema de 13 agentes especializados para residencias geriátricas, creado por Mari Carmen Zamora, auxiliar gerocultora con más de 5 años de experiencia en psicogeriatría.
+
+DATOS ACTUALES DEL RESIDENTE:
+{DATOS}
+
+CÓMO DEBES RESPONDER:
+- Tono siempre cálido, cercano y humano. Como lo haría alguien del equipo que conoce bien a la persona.
+- Empieza siempre reconociendo la emoción detrás de la pregunta antes de responder.
+- Usa el nombre del residente con cariño. Nunca "el paciente" ni "el residente".
+- Traduce los datos técnicos en frases comprensibles y reconfortantes.
+- Respuestas breves y cálidas. Máximo 3-4 párrafos cortos.
+- Termina siempre con una frase reconfortante.
+- NUNCA inventes datos que no estén en la información proporcionada.
+- Si no tienes un dato concreto, dilo con honestidad y amabilidad.
+
+ANTE CUALQUIER INCIDENCIA O NOVEDAD MÉDICA: deriva SIEMPRE a enfermería.
+Fórmula exacta: "Para cualquier novedad en el estado de salud, el equipo de enfermería es quien mejor puede informarte. Puedes contactar con ellos en el teléfono de la residencia en horario de 8:00 a 20:00."
+
+NUNCA: diagnósticos, medicación, historiales clínicos, promesas de seguimiento.`;
+
+let residente = null;
+let historial  = [];
+
+async function buscarResidente(codigo) {
+  const url = `https://script.google.com/macros/s/AKfycbxudgFsJ7Ma6nM_nfkGZLj9wkadcyMS6ujj9Omh0pG-dMpG5W4PfcCtIPtlx1ukOzr-Jg/exec?codigo=${encodeURIComponent(codigo)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Error al conectar');
+  const data = await res.json();
+  if (!data.ok) return null;
+  return data.data;
+}
+
+async function acceder() {
+  const codigo = document.getElementById('room-code').value.trim();
+  if (!codigo) return;
+  const inp = document.getElementById('room-code');
+  const err = document.getElementById('error-msg');
+  inp.classList.remove('error');
+  err.style.display = 'none';
+  document.getElementById('btn-entrar').disabled = true;
+  mostrar('loading');
+  try {
+    const r = await buscarResidente(codigo);
+    if (!r) {
+      mostrar('access');
+      inp.classList.add('error');
+      err.style.display = 'block';
+      document.getElementById('btn-entrar').disabled = false;
+      return;
+    }
+    residente = r;
+    iniciarChat(r);
+  } catch(e) {
+    mostrar('access');
+    document.getElementById('btn-entrar').disabled = false;
+    alert('Problema de conexión. Por favor, inténtalo de nuevo.');
+  }
+}
+
+function iniciarChat(r) {
+  const nombre = r['Nombre'] || 'su familiar';
+  const ini = nombre.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('res-name').textContent = nombre;
+  document.getElementById('res-room').textContent = `Habitación ${r['Habitacion'] || r['Codigo'] || '—'} · ${r['Modulo'] || ''}`;
+  document.getElementById('res-avatar').textContent = ini;
+  historial = [];
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `<div class="typing on" id="typing">
+    <div class="msg-av" style="background:#9B5CC4;">🤝</div>
+    <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>`;
+  mostrar('chat');
+  const pnombre = nombre.split(' ')[0];
+  addMsg('bot', `Hola, soy Alma, el asistente de familias de la residencia. Me alegra que estés aquí. Puedes preguntarme cómo está ${pnombre} — cómo ha comido, cómo ha descansado, cómo se encuentra de ánimo o qué ha hecho hoy. Estoy aquí para que estés tranquilo/a. 💜`);
+}
+
+function formatearDatos(r) {
+  const campos = [
+    ['Nombre','Nombre'],['Habitacion','Habitación'],['Modulo','Módulo'],
+    ['Ingesta_desayuno','Desayuno'],['Ingesta_comida','Comida'],
+    ['Ingesta_merienda','Merienda'],['Ingesta_cena','Cena'],
+    ['Hidratacion','Hidratación'],['Higiene','Higiene personal'],
+    ['Deposiciones','Deposiciones'],['Descanso_noche','Descanso nocturno'],
+    ['Estado_animo','Estado de ánimo'],['Actividades','Actividades del día'],
+    ['Cambios_posturales','Cambios posturales'],
+    ['Observaciones','Observaciones del turno'],
+    ['Fecha_actualizacion','Última actualización']
+  ];
+  const lineas = campos.filter(([k]) => r[k] && r[k] !== '').map(([k,l]) => `${l}: ${r[k]}`);
+  return lineas.length ? lineas.join('\n') : 'Sin datos del turno actual registrados todavía.';
+}
+
+async function enviarIA(pregunta) {
+  const system = SYSTEM_PROMPT.replace('{DATOS}', formatearDatos(residente));
+  historial.push({ role: 'user', content: pregunta });
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system,
+      messages: historial
+    })
+  });
+  const data = await res.json();
+  const resp = data.content?.[0]?.text || 'Lo siento, no he podido obtener esa información ahora mismo. Por favor, inténtalo de nuevo.';
+  historial.push({ role: 'assistant', content: resp });
+  return resp;
+}
+
+async function sendMessage() {
+  const inp = document.getElementById('msg-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = ''; autoResize(inp);
+  await procesar(txt);
+}
+
+async function sendQuick(txt) {
+  document.getElementById('quick-btns').style.display = 'none';
+  await procesar(txt);
+}
+
+async function procesar(txt) {
+  addMsg('user', txt);
+  setTyping(true);
+  try {
+    const r = await enviarIA(txt);
+    setTyping(false);
+    addMsg('bot', r);
+  } catch(e) {
+    setTyping(false);
+    addMsg('bot', 'Ha habido un problema de conexión. Por favor, inténtalo de nuevo en un momento. 💜');
+  }
+}
+
+function addMsg(tipo, txt) {
+  const c = document.getElementById('messages');
+  const t = document.getElementById('typing');
+  const d = document.createElement('div');
+  d.className = `msg ${tipo}`;
+  d.innerHTML = `<div class="msg-av">${tipo === 'bot' ? '🤝' : '👤'}</div><div class="bubble">${txt.replace(/\n/g,'<br>')}</div>`;
+  c.insertBefore(d, t);
+  c.scrollTop = c.scrollHeight;
+}
+
+function setTyping(on) {
+  const t = document.getElementById('typing');
+  if (t) t.className = on ? 'typing on' : 'typing';
+  document.getElementById('messages').scrollTop = 99999;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+function mostrar(p) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + p).classList.add('active');
+}
+
+function salir() {
+  residente = null; historial = [];
+  document.getElementById('room-code').value = '';
+  document.getElementById('room-code').classList.remove('error');
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('btn-entrar').disabled = false;
+  document.getElementById('quick-btns').style.display = 'flex';
+  mostrar('access');
+}
+
+document.getElementById('room-code').addEventListener('keydown', e => { if (e.key === 'Enter') acceder(); });
+</script>
+</body>
+</html>
