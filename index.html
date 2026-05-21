@@ -433,18 +433,12 @@ let residente = null;
 let historial  = [];
 
 async function buscarResidente(codigo) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_TAB)}?key=${GAPI_KEY}`;
+  const url = `https://script.google.com/macros/s/AKfycbxudgFsJ7Ma6nM_nfkGZLj9wkadcyMS6ujj9Omh0pG-dMpG5W4PfcCtIPtlx1ukOzr-Jg/exec?codigo=${encodeURIComponent(codigo)}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Error al conectar con la hoja');
+  if (!res.ok) throw new Error('Error al conectar');
   const data = await res.json();
-  if (!data.values || data.values.length < 2) return null;
-  const headers = data.values[0];
-  for (let i = 1; i < data.values.length; i++) {
-    const obj = {};
-    headers.forEach((h, idx) => { obj[h.trim()] = (data.values[i][idx] || '').trim(); });
-    if (obj['Codigo'] && obj['Codigo'].toUpperCase() === codigo.toUpperCase()) return obj;
-  }
-  return null;
+  if (!data.ok) return null;
+  return data.data;
 }
 
 async function acceder() {
