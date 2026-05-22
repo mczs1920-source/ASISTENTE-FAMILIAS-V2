@@ -135,7 +135,7 @@
 </div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpfWrFlyO2YbV4thujJOct70esQ5smKMBqqlj1OGiu23fLUqCc7Kz-iYmRL0LLbwQN/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPswt6dPQ8iYCOOUz89NJcl0VDnnpcI0L9hKVLMc3OXIlqsr0-1yForhhhiwx0xco/exec';
 
 let residente = null;
 let historial = [];
@@ -186,11 +186,8 @@ function iniciarChat(r) {
 }
 
 async function enviarIA(pregunta) {
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({codigo: codigoActual, pregunta: pregunta, historial: historial})
-  });
+  const url = APPS_SCRIPT_URL + '?codigo=' + encodeURIComponent(codigoActual) + '&pregunta=' + encodeURIComponent(pregunta);
+  const res = await fetch(url);
   const data = await res.json();
   if (data.ok && data.respuesta) {
     historial.push({role:'user', content: pregunta});
@@ -258,3 +255,4 @@ document.getElementById('room-code').addEventListener('keydown', e=>{if(e.key===
 </script>
 </body>
 </html>
+
