@@ -433,7 +433,7 @@ let residente = null;
 let historial  = [];
 
 async function buscarResidente(codigo) {
-  const url = `https://script.google.com/macros/s/AKfycbxudgFsJ7Ma6nM_nfkGZLj9wkadcyMS6ujj9Omh0pG-dMpG5W4PfcCtIPtlx1ukOzr-Jg/exec?codigo=${encodeURIComponent(codigo)}`;
+  const url = `https://script.google.com/macros/s/AKfycbxhoe4kELRjtTDcmInjEK4Bbo2ppn49TSP7wSv8h4rGVtwmbQVg1hEecgihOVrR48RdxQ/exec?codigo=${encodeURIComponent(codigo)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Error al conectar');
   const data = await res.json();
