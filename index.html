@@ -257,6 +257,16 @@ function salir() {
   mostrar('access');
 }
 document.getElementById('room-code').addEventListener('keydown', e=>{if(e.key==='Enter')acceder();});
+
+// Leer código de la URL automáticamente
+window.addEventListener('load', function() {
+  var params = new URLSearchParams(window.location.search);
+  var codigoURL = params.get('codigo');
+  if (codigoURL) {
+    document.getElementById('room-code').value = codigoURL;
+    acceder();
+  }
+});
 </script>
 </body>
 </html>
